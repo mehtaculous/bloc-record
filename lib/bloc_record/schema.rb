@@ -6,6 +6,7 @@ module Schema
     BlocRecord::Utility.underscore(name)
   end
 
+  # {"id"=>"integer", "name"=>"text", "age"=>"integer"}
   def schema
     unless @schema
       @schema = {}
@@ -16,10 +17,12 @@ module Schema
     @schema
   end
 
-  def columns
+  # ["id", "name", "age"]
+  def columns 
     schema.keys
   end
 
+  # ["name", "age"]
   def attributes
     columns - ["id"]
   end

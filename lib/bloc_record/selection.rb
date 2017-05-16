@@ -5,6 +5,12 @@ module Selection
     if ids.length == 1
       find_one(ids.first)
     else
+      ids.each do |id|
+        unless id.is_a?(Numeric) && id >= 1
+          raise ArgumentError.new("ID must be an integer greater than or equal to 1")
+        end
+      end
+
       rows = connection.execute(<<-SQL)
         SELECT #{columns.join ","} FROM #{table}
         WHERE id IN (#{ids.join(",")});
@@ -15,6 +21,10 @@ module Selection
   end
 
   def find_one(id)
+    unless id.is_a?(Numeric) && id >= 1
+      raise ArgumentError.new("ID must be an integer greater than or equal to 1")
+    end
+
     row = connection.get_first_row(<<-SQL)
       SELECT #{columns.join ","} FROM #{table}
       WHERE id = #{id};
@@ -24,6 +34,10 @@ module Selection
   end
 
   def find_by(attribute, value)
+    unless attribute.is_a?(String)
+      raise ArgumentError.new("Input value must be a string")
+    end
+
     row = connection.get_first_row(<<-SQL)
       SELECT #{columns.join ","} FROM #{table}
       WHERE #{attribute} = #{BlocRecord::Utility.sql_strings(value)};
@@ -32,7 +46,31 @@ module Selection
     init_object_from_row(row)
   end
 
+  def find_each(options)
+    rows = connection.execute <<-SQL
+      SELECT #{column.join(",")} FROM #{table}
+      LIMIT #{options[:batch_size]} OFFSET #{options[:start]} 
+    SQL
+
+    for row in rows_to_array(rows)
+      yield row
+    end
+  end
+
+  def find_in_batches(options)
+    rows = connection.execute <<-SQL
+      SELECT #{columns.join(",")} FROM #{table}
+      LIMIT #{options[:batch_size]} OFFSET #{options[:start]} 
+    SQL
+
+    yield rows_to_array(rows)
+  end
+
   def take(num=1)
+    unless num.is_a?(Numeric) && num >= 1
+      raise ArgumentError.new("ID must be an integer greater than or equal to 1")
+    end
+
     if num > 1
       rows = connection.execute <<-SQL
         SELECT #{columns.join ","} FROM #{table}

@@ -19,5 +19,17 @@ module BlocRecord
         self.instance_variable_set("@#{col}", options[col])
       end
     end
+
+    def method_missing(method_name, *args, &block)
+      method = method_name.to_s
+      first_part = method_name[0..6]
+      second_part = method_name[8..-1]
+      if first_part == "find_by"
+        attribute = second_part.to_sym
+        find_by(attribute, *args[0])
+      else
+        super
+      end
+    end
   end
 end

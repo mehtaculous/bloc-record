@@ -27,7 +27,8 @@ module BlocRecord
       options
     end
 
-    def instance_variables_to_hash(obj) # Inverse of Base::initialize
+    # Inverse of Base::initialize
+    def instance_variables_to_hash(obj) 
       Hash[obj.instance_variables.map { |var| ["#{var.to_s.delete('@')}", obj.instance_variable_get(var.to_s)]}]
     end
 
