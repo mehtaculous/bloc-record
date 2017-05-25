@@ -151,26 +151,20 @@ module Selection
 
   def order(*args)
     orders = []
-    if args.count > 1
-      args.each do |arg|
-        case arg
-        when String
-          orders << ascend_descend(arg)
-        when Symbol
-          orders << ascend_descend(arg)
-        when Hash
-          orders << ascend_descend(arg.map { |key, value| "#{key} #{value}" }.join(''))
-        end
+    args.each do |arg|
+      case arg
+      when String
+        orders << arg
+      when Symbol
+        orders << arg
+      when Hash
+        orders << arg.map { |key, value| "#{key} #{value}" }.join(',')
       end
-    else
-      orders = args.first.to_s
     end
-
-    orders.join(",")
 
     rows = connection.execute <<-SQL
       SELECT * FROM #{table}
-      ORDER BY #{orders};
+      ORDER BY #{orders.join(',')};
     SQL
 
     rows_to_array(rows)
@@ -196,7 +190,7 @@ module Selection
       when Hash 
         key = args.first.keys[0]
         value = args.first.values[0]
-        rows = connection <<-SQL
+        rows = connection.execute <<-SQL
           SELECT * FROM
           INNER JOIN #{key} ON #{key}.#{table}_id = #{table}.id
           INNER JOIN #{value} ON #{value}.#{key}_id = #{key}.id
@@ -218,15 +212,8 @@ module Selection
   end
 
   def rows_to_array(rows)
-    rows.map { |row| new(Hash[columns.zip(row)]) }
-  end
-
-  def ascend_descend(string)
-    string = string.to_s
-    if string.include?(" asc") || string.include?(" desc") || string.include?(" ASC") || string.include?(" DESC")
-      return string
-    else
-      string << " ASC"
-    end
+    collection = BlocRecord::Collection.new
+    rows.each { |row| collection << new(Hash[columns.zip(row)]) }
+    collection
   end
 end
