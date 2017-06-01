@@ -23,11 +23,16 @@ module BlocRecord
 
     def method_missing(method_name, *args, &block)
       method = method_name.to_s
-      first_part = method_name[0..6]
-      second_part = method_name[8..-1]
-      if first_part == "find_by"
+      if method.include?('find_by')
+        first_part = method[0..6]
+        second_part = method[8..-1]
         attribute = second_part.to_sym
-        find_by(attribute, *args[0])
+        find_by(attribute, args[0])
+      elsif method.include?('update')
+        first_part = method[0..5]
+        second_part = method[7..-1]
+        attribute = second_part.to_sym
+        update_attribute(attribute, args[0])
       else
         super
       end
