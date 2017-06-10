@@ -1,1 +1,1 @@
-# bloc-record
+# BlocRecord (ORM Gem): a drop-in replacement for ActiveRecord
